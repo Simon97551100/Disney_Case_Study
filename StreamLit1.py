@@ -293,6 +293,7 @@ if Prediction_Select == 'Import Test Data':
         if i not in features_df_new.columns:
             Import_Drop_List.append(i)
     Import_Prediction_Array = []
+    
     df2 = df2.drop(columns=Import_Drop_List)
 
     for i in features_df_new.columns:
