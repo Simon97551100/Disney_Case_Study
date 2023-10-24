@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -9,7 +10,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.metrics import confusion_matrix, roc_curve, auc
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error,r2_score
 import matplotlib.pyplot as plt
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2, f_regression
@@ -21,11 +22,25 @@ from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import RFE
 from sklearn.feature_selection import RFECV
+from sklearn.linear_model import LinearRegression
+from PIL import Image
+
+Theme_Selection = st.selectbox('Which Disney Theme ?',['Cars','Bambi','Peter Pan'])
+if Theme_Selection == 'Cars':
+    image = Image.open('RFLMIntro.jpeg')
+if Theme_Selection == 'Bambi':
+    image = Image.open('RFBAintro.jpeg')
+if Theme_Selection == 'Peter Pan':
+    image = Image.open('RFPPintro.jpeg')
+
+st.image(image)
+
 
 st.title('Random Forest Classification/Regresssion Model')
 
 Upload = st.file_uploader('Upload CSV File Here', type=None, accept_multiple_files=False, key=None, help=None, on_change=None, args=None, kwargs=None, disabled=False, label_visibility="visible")
 df = pd.read_csv(Upload)
+st.write('Raw Dataframe')
 st.write(df)
 
 dropped_columns = st.multiselect(
@@ -40,6 +55,7 @@ for (columnName, columnData) in df.iteritems():
     if df[columnName].dtypes not in [int,float]:
         One_Hot_List.append(columnName)
 df = pd.get_dummies(df, columns=One_Hot_List)
+st.write('Cleansed Dataframe')
 df
 
 CleanUp_Input = st.selectbox(
@@ -51,6 +67,15 @@ if CleanUp_Input == 'Remove Rows With Nan':
     df.dropna(0, inplace=True)
 if CleanUp_Input == 'Replace Nan Values With Average':
     df = df.apply(lambda x: x.fillna(x.mean()), axis=0)
+
+if Theme_Selection == 'Cars':
+    image = Image.open('RFLMCL.jpeg')
+if Theme_Selection == 'Bambi':
+    image = Image.open('RFBACL.jpeg')
+if Theme_Selection == 'Peter Pan':
+    image = Image.open('RFPPCL.jpeg')
+
+st.image(image)
 
 ML_Task = st.selectbox(
     'What type Of Machine Learning Task ?',
@@ -149,8 +174,8 @@ Num_Features = st.number_input('How Many Features In The Algorithim? (Skip If Us
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=Test_size, random_state=Random_state)
 if ML_Task == 'Regression':
-    Feature_Selection_Method = st.selectbox('Which Feature Selection Method ?',['Univariate','Recursive_Feature_Elimination'])
-    if Feature_Selection_Method == 'Univariate':
+    Feature_Selection_Method = st.selectbox('Which Feature Selection Method ?',['Univariate_Feature_Selection','Recursive_Feature_Elimination'])
+    if Feature_Selection_Method == 'Univariate_Feature_Selection':
         Univariate_Method = st.selectbox('Which Score Function ?',['f_regression'])
         if Univariate_Method == 'f_regression':
             select_feature = SelectKBest(f_regression, k=Num_Features).fit(X_train, y_train)
@@ -158,6 +183,7 @@ if ML_Task == 'Regression':
             X_test_selected = select_feature.transform(X_test)
             cols_idxs = select_feature.get_support(indices=True)
             features_df_new = X_train.iloc[:,cols_idxs]
+            st.write('Feature_Used')
             features_df_new
     if Feature_Selection_Method == 'Recursive_Feature_Elimination':
         rfecv = RFECV(estimator=RandomForestRegressor(), step=1, cv=5, scoring='r2')
@@ -166,11 +192,19 @@ if ML_Task == 'Regression':
         X_test_selected = rfecv.transform(X_test)
         cols_idxs = rfecv.get_support(indices=True)
         features_df_new = X_train.iloc[:,cols_idxs]
+        st.write('Feature_Used')
         features_df_new
+if Theme_Selection == 'Cars':
+    image = Image.open('RFLMUR.jpeg')
+if Theme_Selection == 'Bambi':
+    image = Image.open('RFBAUR.jpeg')
+if Theme_Selection == 'Peter Pan':
+    image = Image.open('RFPPUR.jpeg')
+st.image(image)
 
 if ML_Task == 'Classification':
-    Feature_Selection_Method = st.selectbox('Which Feature Selection Method ?',['Univariate','Recursive_Feature_Elimination'])
-    if Feature_Selection_Method == 'Univariate':
+    Feature_Selection_Method = st.selectbox('Which Feature Selection Method ?',['Univariate_Feature_Selection','Recursive_Feature_Elimination'])
+    if Feature_Selection_Method == 'Univariate_Feature_Selection':
         Univariate_Method = st.selectbox('Which Score Function ?',['f_classif','chi2'])
         if Univariate_Method == 'f_classif':
             select_feature = SelectKBest(f_classif, k=Num_Features).fit(X_train, y_train)
@@ -178,6 +212,7 @@ if ML_Task == 'Classification':
             X_test_selected = select_feature.transform(X_test)
             cols_idxs = select_feature.get_support(indices=True)
             features_df_new = X_train.iloc[:,cols_idxs]
+            st.write('Feature_Used')
             features_df_new
         if Univariate_Method == 'chi2':
             select_feature = SelectKBest(chi2, k=Num_Features).fit(X_train, y_train)
@@ -185,6 +220,7 @@ if ML_Task == 'Classification':
             X_test_selected = select_feature.transform(X_test)
             cols_idxs = select_feature.get_support(indices=True)
             features_df_new = X_train.iloc[:,cols_idxs]
+            st.write('Feature_Used')
             features_df_new
     if Feature_Selection_Method == 'Recursive_Feature_Elimination':
         rfecv = RFECV(estimator=RandomForestClassifier(), step=1, cv=5, scoring='accuracy')
@@ -193,17 +229,11 @@ if ML_Task == 'Classification':
         X_test_selected = rfecv.transform(X_test)
         cols_idxs = rfecv.get_support(indices=True)
         features_df_new = X_train.iloc[:,cols_idxs]
+        st.write('Feature_Used')
         features_df_new
 
-
-
-
-
-
-
-
-
-
+train_accuracies = []
+test_accuracies = []
 
 
 if ML_Task == 'Regression':
@@ -212,21 +242,29 @@ if ML_Task == 'Regression':
     for n_estimators in n_estimators_range:
         rf_model = RandomForestRegressor(n_estimators=n_estimators,criterion = Criterion,max_depth=None,min_samples_split=Min_samples_split,min_samples_leaf=Min_samples_leaf,min_weight_fraction_leaf=Min_weight_fraction_leaf,max_features=Max_features,max_leaf_nodes=Max_leaf_nodes,min_impurity_decrease=Min_impurity_decrease,bootstrap=Bootstrap,random_state=Random_state,max_samples=Max_samples,oob_score=True)
         rf_model.fit(X_train_selected, y_train)
-        oob_error = 1 - rf_model.oob_score_
-        oob_errors.append(oob_error)
-    best_n_estimators = n_estimators_range[np.argmin(oob_errors)]
-    num_estimators = st.number_input(f"Number of Estimators (Recommended :{best_n_estimators})",1,1000,best_n_estimators)
-
+        y_pred_train = rf_model.predict(X_train_selected)
+        train_acc = r2_score(y_train, y_pred_train)
+        train_accuracies.append(train_acc)
+        y_pred = rf_model.predict(X_test_selected)
+        test_acc = r2_score(y_test, y_pred)
+        test_accuracies.append(test_acc)
+    best_num_estimator = n_estimators_range[test_accuracies.index(max(test_accuracies))]
+    num_estimators = st.number_input(f"Number of Estimators (Recommended :{best_num_estimator})",1,1000,best_num_estimator)
+    rf_model = RandomForestRegressor(n_estimators=best_num_estimator,criterion = Criterion,max_depth=None,min_samples_split=Min_samples_split,min_samples_leaf=Min_samples_leaf,min_weight_fraction_leaf=Min_weight_fraction_leaf,max_features=Max_features,max_leaf_nodes=Max_leaf_nodes,min_impurity_decrease=Min_impurity_decrease,bootstrap=Bootstrap,random_state=Random_state,max_samples=Max_samples)
+    rf_model.fit(X_train_selected, y_train)
     y_pred = rf_model.predict(X_test_selected)
 
-    st.write(f'Train Accuracy - : {rf_model.score(X_train_selected,y_train):.3f}')
-    st.write(f'Test Accuracy - : {rf_model.score(X_test_selected,y_test):.3f}')
-
     mae = mean_absolute_error(y_test, y_pred)
-    st.write(f"Mean Absolute Error (MAE): {mae}")
 
     mse = mean_squared_error(y_test, y_pred)
-    st.write(f"Mean Squared Error (MSE): {mse}")
+
+if Theme_Selection == 'Cars':
+    image = Image.open('RFLMNO.jpeg')
+if Theme_Selection == 'Bambi':
+    image = Image.open('RFBANO.jpeg')
+if Theme_Selection == 'Peter Pan':
+    image = Image.open('RFPPNO.jpeg')
+st.image(image)
 
 if ML_Task == 'Classification':
     n_estimators_range = range(1, 201, 10) 
@@ -234,36 +272,74 @@ if ML_Task == 'Classification':
     for n_estimators in n_estimators_range:
         rf_model = RandomForestClassifier(n_estimators=n_estimators,criterion = Criterion,max_depth=None,min_samples_split=Min_samples_split,min_samples_leaf=Min_samples_leaf,min_weight_fraction_leaf=Min_weight_fraction_leaf,max_features=Max_features,max_leaf_nodes=Max_leaf_nodes,min_impurity_decrease=Min_impurity_decrease,bootstrap=Bootstrap,random_state=Random_state,max_samples=Max_samples,oob_score=True)
         rf_model.fit(X_train_selected, y_train)
-        oob_error = 1 - rf_model.oob_score_
-        oob_errors.append(oob_error)
-    best_n_estimators = n_estimators_range[np.argmin(oob_errors)]
-    num_estimators = st.number_input(f"Number of Estimators (Recommended : {best_n_estimators})",1,1000,best_n_estimators)
-    rf_model = RandomForestClassifier(n_estimators=num_estimators,criterion = Criterion,max_depth=None,min_samples_split=Min_samples_split,min_samples_leaf=Min_samples_leaf,min_weight_fraction_leaf=Min_weight_fraction_leaf,max_features=Max_features,max_leaf_nodes=Max_leaf_nodes,min_impurity_decrease=Min_impurity_decrease,bootstrap=Bootstrap,random_state=Random_state,max_samples=Max_samples)
-    
+        y_pred_train = rf_model.predict(X_train_selected)
+        train_acc = r2_score(y_train, y_pred_train)
+        train_accuracies.append(train_acc)
+        y_pred = rf_model.predict(X_test_selected)
+        test_acc = r2_score(y_test, y_pred)
+        test_accuracies.append(test_acc)
+    best_num_estimator = n_estimators_range[test_accuracies.index(max(test_accuracies))]
+    num_estimators = st.number_input(f"Number of Estimators (Recommended :{best_num_estimator})",1,1000,best_num_estimator)
+    rf_model = RandomForestClassifier(n_estimators=best_num_estimator,criterion = Criterion,max_depth=None,min_samples_split=Min_samples_split,min_samples_leaf=Min_samples_leaf,min_weight_fraction_leaf=Min_weight_fraction_leaf,max_features=Max_features,max_leaf_nodes=Max_leaf_nodes,min_impurity_decrease=Min_impurity_decrease,bootstrap=Bootstrap,random_state=Random_state,max_samples=Max_samples)
     rf_model.fit(X_train_selected, y_train)
     y_pred = rf_model.predict(X_test_selected)
 
 
-    st.write(f'Train Accuracy - : {rf_model.score(X_train_selected,y_train):.3f}')
-    st.write(f'Test Accuracy - : {rf_model.score(X_test_selected,y_test):.3f}')
-
-    accuracy = accuracy_score(y_test, y_pred)
-    st.write(f"Accuracy: {accuracy}")
-
-    precision = precision_score(y_test, y_pred)
-    st.write(f"Precision: {precision}")
-
-    recall = recall_score(y_test, y_pred)
-    st.write(f"Recall: {recall}")
-
-    f1 = f1_score(y_test, y_pred)
-    st.write(f"F1 Score: {f1}")
-
     mae = mean_absolute_error(y_test, y_pred)
-    st.write(f"Mean Absolute Error (MAE): {mae}")
 
     mse = mean_squared_error(y_test, y_pred)
-    st.write(f"Mean Squared Error (MSE): {mse}")
+
+
+st.write('Evaluation Metrics')
+st.write(f'Train Accuracy - : {rf_model.score(X_train_selected,y_train):.3f}')
+st.write(f'Test Accuracy - : {rf_model.score(X_test_selected,y_test):.3f}')
+
+plt.figure(figsize=(10, 6))
+plt.plot(n_estimators_range, train_accuracies, label='Test R-squared (R2)')
+plt.xlabel('Number of Estimators')
+plt.ylabel('R-squared (R2) Score')
+plt.title('Train Accuracies vs. Number of Estimators')
+plt.legend()
+st.pyplot(plt)
+
+plt.figure(figsize=(10, 6))
+plt.plot(n_estimators_range, test_accuracies, label='Train R-squared (R2)')
+plt.xlabel('Number of Estimators')
+plt.ylabel('R-squared (R2) Score')
+plt.title('Test Accuracies vs. Number of Estimators')
+plt.legend()
+st.pyplot(plt)
+
+plt.figure(figsize=(12, 6))
+# Plot for MAE
+plt.subplot(1, 2, 1)
+plt.scatter(y_test, y_pred, color='blue')
+plt.title(f'Actual vs. Predicted (MAE: {mae:.3f})')
+plt.xlabel('Actual')
+plt.ylabel('Predicted')
+
+# Fit a regression line for MAE
+reg_mae = LinearRegression()
+reg_mae.fit(np.array(y_test).reshape(-1, 1), y_pred)
+y_pred_reg_mae = reg_mae.predict(np.array(y_test).reshape(-1, 1))
+plt.plot(y_test, y_pred_reg_mae, color='red', linewidth=2)
+
+# Plot for MSE
+plt.subplot(1, 2, 2)
+plt.scatter(y_test, y_pred, color='green')
+plt.title(f'Actual vs. Predicted (MSE: {mse:.3f})')
+plt.xlabel('Actual')
+plt.ylabel('Predicted')
+
+# Fit a regression line for MSE
+reg_mse = LinearRegression()
+reg_mse.fit(np.array(y_test).reshape(-1, 1), y_pred)
+y_pred_reg_mse = reg_mse.predict(np.array(y_test).reshape(-1, 1))
+plt.plot(y_test, y_pred_reg_mse, color='orange', linewidth=2)
+
+st.pyplot(plt)
+
+
 
 Prediction_Select = st.selectbox('Prediction Method',['Import Test Data','Custom'])
 if Prediction_Select == 'Custom':
@@ -293,14 +369,10 @@ if Prediction_Select == 'Import Test Data':
         if i not in features_df_new.columns:
             Import_Drop_List.append(i)
     Import_Prediction_Array = []
-    
     df2 = df2.drop(columns=Import_Drop_List)
-
     for i in features_df_new.columns:
         if i not in df2.columns:
             df2[i]=0
-    st.write(len(df2.columns))
-    st.write(len(features_df_new.columns))
     for index, row in df2.iterrows():
         Import_Prediction_Array.append(list(row))
     Prediction_List = []
